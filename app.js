@@ -14,22 +14,36 @@ const welcome = (req, res) => {
 
 app.get("/", welcome);
 
-const { hashPassword } = require("./auth.js");
 const { validateMovie, validateUser } = require("./validators.js");
+const {
+  hashPassword,
+  verifyPassword,
+  verifyToken,
+  verifyId,
+} = require("./auth.js");
 
 const movieHandlers = require("./movieHandlers");
+const userHandlers = require("./userHandlers");
 
 app.get("/api/movies", movieHandlers.getMovies);
 app.get("/api/movies/:id", movieHandlers.getMovieById);
+app.get("/api/users", userHandlers.getUsers);
+app.get("/api/users/:id", userHandlers.getUserById);
+app.post("/api/users", hashPassword, validateUser, userHandlers.postUser);
+app.post(
+  "/api/login",
+  userHandlers.getUserByEmailWithPasswordAndPassToNext,
+  verifyPassword
+);
+
+app.use(verifyToken); // authentication wall : verifyToken is activated for each route after this line
+
 app.post("/api/movies", validateMovie, movieHandlers.postMovie);
 app.put("/api/movies/:id", validateMovie, movieHandlers.updateMovie);
 app.delete("/api/movies/:id", movieHandlers.deleteMovie);
 
-const userHandlers = require("./userHandlers");
+app.use(verifyId); // authentication wall : verifyId is activated for each route after this line
 
-app.get("/api/users", userHandlers.getUsers);
-app.get("/api/users/:id", userHandlers.getUserById);
-app.post("/api/users", hashPassword, validateUser, userHandlers.postUser);
 app.put("/api/users/:id", hashPassword, validateUser, userHandlers.updateUser);
 app.delete("/api/users/:id", userHandlers.deleteUser);
 
